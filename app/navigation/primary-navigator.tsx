@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react"
 import { createStackNavigator } from "@react-navigation/stack"
 import { createDrawerNavigator, DrawerItemList } from '@react-navigation/drawer'
 import Feather from '@expo/vector-icons/Feather'
-import { WelcomeScreen, DemoScreen, SignUp } from "../screens"
+import { WelcomeScreen, DemoScreen, SignUp, Users } from "../screens"
 import { useNavigation } from "@react-navigation/native"
 import AsyncStorage from "@react-native-community/async-storage"
 import { SafeAreaView, Text, Image, View, Alert } from "react-native"
@@ -38,6 +38,7 @@ export type PrimaryParamList = {
   drawer: undefined
   home: undefined
   signUp: undefined
+  users: undefined
 }
 
 // Documentation: https://reactnavigation.org/docs/stack-navigator/
@@ -122,9 +123,17 @@ export function Drawer() {
           </TouchableOpacity>
         </View>
         <DrawerItemList {...props} />
+        <TouchableOpacity onPress={()=>{}} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
+          <Feather name='users' size={25} color='#FFF' />
+          <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Panda Team</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={()=>{}} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
+          <Feather name='dollar-sign' size={25} color='#FFF' />
+          <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Entradas</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={logout} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
           <Feather name='log-out' size={25} color='#FFF' />
-          <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5 }}>Sair</Text>
+          <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Sair</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -157,6 +166,8 @@ export function Drawer() {
             iconName = 'home'
           } else if (route.name === 'signUp') {
             iconName = 'user-plus'
+          } else if (route.name === 'users') {
+            iconName = 'users'
           } 
 
           // You can return any component that you like here!
@@ -166,6 +177,7 @@ export function Drawer() {
     >
       <Draw.Screen name="home" options={{ title: 'Início' }} component={DemoScreen} />
       <Draw.Screen name="signUp" options={{ title: 'Registrar Membro' }} component={SignUp} />
+      {/* <Draw.Screen name="users" options={{ title: 'Panda Team' }} component={Users} /> */}
     </Draw.Navigator>
   )
 }

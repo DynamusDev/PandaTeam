@@ -87,7 +87,7 @@ const timeToString = (time) => {
   return date.toISOString().split('T')[0];
 }
 
-export const SignUp = observer(function SignUp() {
+export const Users = observer(function Users() {
   const navigation = useNavigation()
   const goBack = () => navigation.goBack()
   const [email, setEmail] = useState('')

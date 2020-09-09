@@ -64,7 +64,7 @@ export const DemoScreen = observer(function DemoScreen() {
           const numItems = Math.floor(Math.random() * 3 + 1);
           for (let j = 0; j < numItems; j++) {
             items[strTime].push({
-              name: 'Item for ' + strTime + ' #' + j,
+              name: 'Evento - clique para ver a descrição',
               height: Math.max(50, Math.floor(Math.random() * 150))
             });
           }

@@ -6,7 +6,7 @@ import axios from 'axios'
 
 export const api = axios.create({
   // Development Mode
-  // baseURL: 'http://192.168.15.12:3333'
+  // baseURL: 'http://192.168.15.21:3333'
   // Production Mode
   baseURL: 'https://panda-team.herokuapp.com'
 })

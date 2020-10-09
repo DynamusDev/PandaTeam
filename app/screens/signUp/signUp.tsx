@@ -6,7 +6,7 @@ import { BulletItem, Button, Header, Text, Screen, Wallpaper, Icon, CommonButton
 import { color, spacing } from "../../theme"
 import { api } from "../../services/api"
 import { save } from "../../utils/storage"
-import { useIsDrawerOpen } from '@react-navigation/drawer';
+import { useIsDrawerOpen } from '@react-navigation/drawer'
 import CheckBox from 'react-native-check-box'
 import Spinner from 'react-native-loading-spinner-overlay'
 
@@ -23,7 +23,7 @@ const CONTENT: ViewStyle = {
 const BOLD: TextStyle = { fontWeight: "bold" }
 const HEADER: TextStyle = {
   paddingTop: spacing[3],
-  paddingBottom: spacing[3] ,
+  paddingBottom: spacing[3],
   paddingHorizontal: spacing[3],
   backgroundColor: color.palette.cyan
 }
@@ -83,8 +83,8 @@ const HEADERMODAL: ViewStyle = {
 }
 
 const timeToString = (time) => {
-  const date = new Date(time);
-  return date.toISOString().split('T')[0];
+  const date = new Date(time)
+  return date.toISOString().split('T')[0]
 }
 
 export const SignUp = observer(function SignUp() {
@@ -99,11 +99,11 @@ export const SignUp = observer(function SignUp() {
   const isDrawerOpen = useIsDrawerOpen()
 
   async function handleSubmit() {
-    if(name === '') {
+    if (name === '') {
       Alert.alert('Erro ao registrar!', 'Por favor, informe o nome do membro para continuarmos com o registro')
-    }else if(email === '') {
+    } else if (email === '') {
       Alert.alert('Erro ao registrar!', 'Por favor, informe o email do membro para continuarmos com o registro')
-    }else{
+    } else {
       try {
         setSpinner(true)
         const response = await api.post('sign_up', {
@@ -111,20 +111,19 @@ export const SignUp = observer(function SignUp() {
           email,
           admin
         })
-        if(response.data.status === 200) {
+        if (response.data.status === 200) {
           Alert.alert('Sucesso!!!', response.data.message)
           setEmail('')
           setName('')
           setAdmin(false)
           setSpinner(false)
-        }else if(response.data.status === 400){
+        } else if (response.data.status === 400) {
           setSpinner(false)
           Alert.alert('Erro ao registrar!!!', response.data.error)
-        }else if(response.data.status === 401){
+        } else if (response.data.status === 401) {
           setSpinner(false)
           Alert.alert('Erro ao registrar!!!', response.data.error)
         }
-
       } catch (err) {
         console.log(err)
         Alert.alert('Erro ao registrar!!!', 'Tente novamente')
@@ -154,29 +153,29 @@ export const SignUp = observer(function SignUp() {
         textStyle={{ color: '#FFF' }}
         overlayColor={'rgba(0,0,0,0.80)'}
       />
-      <Screen style={CONTAINER} preset="scroll" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
+      <Screen style={CONTAINER} preset="fixed" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
         <Header
           headerText='Cadastrar Novo Membro'
           style={HEADER}
           titleStyle={HEADER_TITLE}
           rightIcon='menu'
-          onRightPress={()=>{navigation.openDrawer()}}
+          onRightPress={() => { navigation.openDrawer() }}
         />
         <View style={CONTENT}>
           <Icon name='newPanda' style={{ height: 100, width: 200, backgroundColor: color.transparent }}/>
-          <Text style={{color: '#fff', marginVertical: 10, textAlign: 'center', fontSize: 18}}>Recrutamos pessoas fortes para um time excepcional!</Text>
+          <Text style={{ color: '#fff', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Recrutamos pessoas fortes para um time excepcional!</Text>
           <TextInput style={INPUT} multiline={false} autoCapitalize='words' value={name} onChangeText={setName} placeholder='Nome Completo' />
           <TextInput style={INPUT} autoCompleteType='email' keyboardType='email-address' multiline={false} autoCapitalize='none' value={email} onChangeText={setEmail} placeholder='Email' />
-          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-            <Text style={{color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18}}>Este usuário é um admin?</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Este usuário é um admin?</Text>
             <CheckBox
-              style={{padding: 10}}
-              onClick={()=>{setAdmin(!admin)}}
+              style={{ padding: 10 }}
+              onClick={() => { setAdmin(!admin) }}
               isChecked={admin}
               leftText={"Este usuário é um adm?"}
             />
           </View>
-          <CommonButton name="Registrar Menbro" style={{width: '50%'}} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
+          <CommonButton name="Registrar Menbro" style={{ width: '50%' }} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
         </View>
       </Screen>
     </View>

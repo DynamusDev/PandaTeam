@@ -13,7 +13,7 @@ import Spinner from 'react-native-loading-spinner-overlay'
 import { CommonButton, Icon, Screen, Text, HeaderButton } from "../../components"
 import { api } from '../../services/api'
 import { color, spacing } from "../../theme"
-import { useAuth } from '../../hooks/auth';
+import { useAuth } from '../../hooks/auth'
 console.disableYellowBox = true
 
 const FULL: ViewStyle = { flex: 1 }
@@ -138,7 +138,7 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
   const navigation = useNavigation()
   const nextScreen = () => navigation.navigate("demo")
 
-  const { signIn } = useAuth();
+  const { signIn } = useAuth()
 
   useEffect(() => {
     navigate()
@@ -162,17 +162,17 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
         email: emailP
       })
 
-      if(response.data.status === 400) {
+      if (response.data.status === 400) {
         Alert.alert('Erro ao enviar!!!', response.data.error)
         setSpinner(false)
-      }else if(response.data.status === 200){
+      } else if (response.data.status === 200) {
         Alert.alert('Sucesso!!!', response.data.message)
         setSpinner(false)
       }
       setEmailP('')
       setSpinner(false)
       setModalVisible(false)
-    }catch{
+    } catch {
       Alert.alert('Erro ao enviar!!!', 'Tente novamente')
       setSpinner(false)
     }
@@ -185,18 +185,17 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
         email,
         password,
       })
-      if(response.data.status === 200) {
-        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      if (response.data.status === 200) {
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.user))
         navigation.navigate("drawer")
         setSpinner(false)
-      }else if(response.data.status === 400){
+      } else if (response.data.status === 400) {
         setSpinner(false)
         Alert.alert('Erro ao logar!!!', response.data.error)
-      }else if(response.data.status === 401){
+      } else if (response.data.status === 401) {
         setSpinner(false)
         Alert.alert('Erro ao logar!!!', response.data.error)
       }
-
     } catch (err) {
       console.log(err)
       Alert.alert('Erro ao logar!!!', 'Tente novamente')
@@ -219,36 +218,36 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
         overlayColor={'rgba(0,0,0,0.80)'}
       />
       <Modal
-            visible={modalVisible}
-            transparent={true}
-            animationType={"fade"}
-            onRequestClose={ () => { setModalVisible(false) } } >
-              <View style={ALERTCENTERED}>
-                <View style={ALERTVIEW}>
-                  <View style={HEADERMODAL}>
-                    <HeaderButton name='close' onPress={() => { setModalVisible(false) }} />
-                  </View>
-                  <Text style={ALERTTEXT}>Informe seu email</Text>
-                  <TextInput 
-                    style={{...INPUT, width: '100%'}} 
-                    autoCompleteType='email' 
-                    keyboardType='email-address' 
-                    multiline={false} 
-                    autoCapitalize='none' 
-                    value={emailP} 
-                    onChangeText={setEmailP} 
-                    placeholder='Email' 
-                  />
-                  <CommonButton
-                    name="Enviar"
-                    background={color.palette.Emergência}
-                    onPress={() => {
-                      forgotPassword()
-                    }}
-                  />
-                </View>
-              </View>
-          </Modal>
+        visible={modalVisible}
+        transparent={true}
+        animationType={"fade"}
+        onRequestClose={ () => { setModalVisible(false) } } >
+        <View style={ALERTCENTERED}>
+          <View style={ALERTVIEW}>
+            <View style={HEADERMODAL}>
+              <HeaderButton name='close' onPress={() => { setModalVisible(false) }} />
+            </View>
+            <Text style={ALERTTEXT}>Informe seu email</Text>
+            <TextInput
+              style={{ ...INPUT, width: '100%' }}
+              autoCompleteType='email'
+              keyboardType='email-address'
+              multiline={false}
+              autoCapitalize='none'
+              value={emailP}
+              onChangeText={setEmailP}
+              placeholder='Email'
+            />
+            <CommonButton
+              name="Enviar"
+              background={color.palette.Emergência}
+              onPress={() => {
+                forgotPassword()
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
       <Screen style={CONTAINER} statusBar='light-content' barBackground={color.palette.cyan} preset="scroll" backgroundColor={color.palette.cyan}>
         <Icon name='panda' style={{ height: 100, width: 200, backgroundColor: color.transparent }}/>
         <TextInput style={INPUT} autoCompleteType='email' keyboardType='email-address' multiline={false} autoCapitalize='none' value={email} onChangeText={setEmail} placeholder='Email' />
@@ -260,7 +259,7 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
           </TouchableOpacity>
         </View>
         <CommonButton name="Login" onPress={handleSubmit} background={color.palette.green} preset="primary" />
-        <CommonButton name="Esqueci minha senha" style={{width: 'auto', marginTop: 0}} textStyle={{color: '#fff', textDecorationLine: 'underline'}} onPress={()=>{setModalVisible(true)}} background={color.transparent} preset="primary" />
+        <CommonButton name="Esqueci minha senha" style={{ width: 'auto', marginTop: 0 }} textStyle={{ color: '#fff', textDecorationLine: 'underline' }} onPress={() => { setModalVisible(true) }} background={color.transparent} preset="primary" />
       </Screen>
       <SafeAreaView style={FOOTER}>
         <View style={FOOTER_CONTENT}>

@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react"
-import { Image, ImageStyle, Platform, TextStyle, View, ViewStyle, AsyncStorage, Alert, TouchableOpacity, TextInput } from "react-native"
+import { 
+          Image, 
+          ImageStyle, 
+          Platform, 
+          TextStyle, 
+          View, 
+          ViewStyle, 
+          AsyncStorage, 
+          Alert, 
+          TouchableOpacity, 
+          TextInput,
+          FlatList, Modal
+        } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { observer } from "mobx-react-lite"
 import { BulletItem, Button, Header, Text, Screen, Wallpaper, Icon, CommonButton } from "../../components"
@@ -16,9 +28,35 @@ const CONTAINER: ViewStyle = {
 }
 const CONTENT: ViewStyle = {
   flex: 1,
-  backgroundColor: color.palette.blue,
+  backgroundColor: '#fff',
   alignItems: 'center',
   justifyContent: 'center'
+}
+const USERLIST: ViewStyle = {
+  flex:1,
+  width:'100%',
+}
+const CENTEREDVIEW: ViewStyle = {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  marginTop: 22
+}
+const MODALVIEW: ViewStyle = {
+  margin: 20,
+  backgroundColor: "#00368E",
+  borderRadius: 20,
+  width:300,
+  height:400,
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 2
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  elevation: 5
 }
 const BOLD: TextStyle = { fontWeight: "bold" }
 const HEADER: TextStyle = {
@@ -94,6 +132,8 @@ export const Users = observer(function Users() {
   const [name, setName] = useState('')
   const [admin, setAdmin] = useState(false)
   const [spinner, setSpinner] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false);
+  const [users, setUsers] = useState([])
   const [user, setUser] = useState([])
   const hoje = new Date()
   const isDrawerOpen = useIsDrawerOpen()
@@ -141,12 +181,25 @@ export const Users = observer(function Users() {
         const usuário = JSON.parse(myArray)
         setUser(usuário)
       }
+      const response = await api.get('users')
+      setUsers(response.data.users)
     };
     retrieveData()
   }, [])
 
   return (
     <View style={FULL}>
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType={"fade"}
+        onRequestClose={ () => { setModalVisible(false)} } >
+        <View style={CENTEREDVIEW}>
+          <View style={MODALVIEW}>
+            
+          </View>
+        </View>
+      </Modal>
       <Spinner
         visible={spinner}
         textContent={'Loading...'}
@@ -156,27 +209,83 @@ export const Users = observer(function Users() {
       />
       <Screen style={CONTAINER} preset="scroll" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
         <Header
-          headerText='Cadastrar Novo Membro'
+          headerText='Panda Team!!! '
           style={HEADER}
           titleStyle={HEADER_TITLE}
           rightIcon='menu'
           onRightPress={()=>{navigation.openDrawer()}}
         />
         <View style={CONTENT}>
-          <Icon name='newPanda' style={{ height: 100, width: 200, backgroundColor: color.transparent }}/>
-          <Text style={{color: '#fff', marginVertical: 10, textAlign: 'center', fontSize: 18}}>Recrutamos pessoas fortes para um time excepcional!</Text>
-          <TextInput style={INPUT} multiline={false} autoCapitalize='words' value={name} onChangeText={setName} placeholder='Nome Completo' />
-          <TextInput style={INPUT} autoCompleteType='email' keyboardType='email-address' multiline={false} autoCapitalize='none' value={email} onChangeText={setEmail} placeholder='Email' />
-          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-            <Text style={{color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18}}>Este usuário é um admin?</Text>
-            <CheckBox
-              style={{padding: 10}}
-              onClick={()=>{setAdmin(!admin)}}
-              isChecked={admin}
-              leftText={"Este usuário é um adm?"}
-            />
-          </View>
-          <CommonButton name="Registrar Menbro" style={{width: '50%'}} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
+        <FlatList
+            data={ users }
+            style={USERLIST}
+            contentContainerStyle={{
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={user => String(user)}
+            renderItem={({item:users}) => (
+              <View style={{
+                maxHeight: 100,
+                alignItems: 'center', 
+                backgroundColor:'#E6E7E8',
+                marginTop: 15,
+                width: 350,
+                borderRadius: 10,
+                }}>
+                <TouchableOpacity
+                  onPress={() => {  }}
+                  style={{
+                          flexDirection:'row',
+                          alignItems:'center',
+                          paddingHorizontal:5,
+                          paddingVertical: 5,
+                          borderRadius: 10,
+                          }}>
+                      <Image
+                        style={{width:60,
+                                height:60,
+                                borderRadius:30,
+                                borderColor:'#000',
+                                marginRight: 20, }}
+                        source={{uri: `data:image/gif;base64,${users.avatar}`}}
+                        resizeMode='contain'/>
+                      <View>
+                        <Text style={{color:'#58595B', fontSize:20, fontWeight:'bold' }}>{users.name}</Text>
+                        <Text style={{color:'#58595B', fontSize:15 }}>{users.email}</Text>
+                      </View>
+                </TouchableOpacity>
+              {user.admin === true ? (
+                <View style={{flexDirection: 'row'}}>
+                  <TouchableOpacity 
+                    style={{
+                      height: 30, 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      width: '20%',
+                    }}
+                    onPress={()=>{Alert.alert('teste', 'teste')}}
+                  >
+                    <Text style={{color:'#58595B', fontSize:15 }}>editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={{
+                      height: 30, 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      width: '20%',
+                    }}
+                    onPress={()=>{Alert.alert('teste', 'teste')}}
+                  >
+                    <Text style={{color:'#58595B', fontSize:15 }}>excluir</Text>
+                  </TouchableOpacity>
+                </View>
+                ) : null
+              }
+              </View>
+            )}
+          />
         </View>
       </Screen>
     </View>

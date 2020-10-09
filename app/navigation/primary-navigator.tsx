@@ -123,10 +123,7 @@ export function Drawer() {
           </TouchableOpacity>
         </View>
         <DrawerItemList {...props} />
-        <TouchableOpacity onPress={()=>{}} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
-          <Feather name='users' size={25} color='#FFF' />
-          <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Panda Team</Text>
-        </TouchableOpacity>
+        
         <TouchableOpacity onPress={()=>{}} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
           <Feather name='dollar-sign' size={25} color='#FFF' />
           <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Entradas</Text>
@@ -177,7 +174,7 @@ export function Drawer() {
     >
       <Draw.Screen name="home" options={{ title: 'Início' }} component={DemoScreen} />
       <Draw.Screen name="signUp" options={{ title: 'Registrar Membro' }} component={SignUp} />
-      {/* <Draw.Screen name="users" options={{ title: 'Panda Team' }} component={Users} /> */}
+      <Draw.Screen name="users" options={{ title: 'Panda Team' }} component={Users} />
     </Draw.Navigator>
   )
 }

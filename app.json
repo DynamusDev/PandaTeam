@@ -4,18 +4,20 @@
     "slug": "Pandas",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/panda.png",
+    "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/panda.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#55D500"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.dynamusdev.Pandas"
     },
     "web": {
       "favicon": "./assets/favicon.png"

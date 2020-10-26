@@ -39,7 +39,6 @@ export const viewPresets = {
   link: {
     ...BASE_VIEW,
     paddingVertical: spacing[2],
-    paddingHorizontal: spacing[2],
     alignItems: "center",
     justifyContent: "center",
   } as ViewStyle,

@@ -3,29 +3,23 @@
 /* eslint-disable no-sequences */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-native/no-color-literals */
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import { Image, ImageStyle, Platform, TextStyle, View, ViewStyle, AsyncStorage, Alert, TouchableOpacity, Modal } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { observer } from "mobx-react-lite"
 import { BulletItem, Button, Header, Text, Screen, Wallpaper, HeaderButton, CommonButton } from "../../components"
 import { color, spacing } from "../../theme"
-import { Calendar, CalendarList, Agenda, LocaleConfig } from 'react-native-calendars'
-import { api } from "../../services/api"
+import socketio from 'socket.io-client'
+import Feather from '@expo/vector-icons/Feather'
+import { api, sock } from "../../services/api"
 import { save } from "../../utils/storage"
 import { useIsDrawerOpen } from '@react-navigation/drawer'
 import { FlatList, ScrollView, TextInput } from "react-native-gesture-handler"
 import DateTimePicker from "react-native-modal-datetime-picker"
 import * as ImagePicker from 'expo-image-picker'
 import Constants from 'expo-constants'
-
-LocaleConfig.locales.br = {
-  monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
-  monthNamesShort: ['Jan.', 'Fev.', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul.', 'Ago', 'Set.', 'Out.', 'Nov.', 'Dez.'],
-  dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
-  dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
-  today: 'Hoje'
-}
-LocaleConfig.defaultLocale = 'br'
+import Permissions from 'expo-permissions'
+import Spinner from 'react-native-loading-spinner-overlay'
 
 const FULL: ViewStyle = { flex: 1, backgroundColor: '#fff', }
 const CONTAINER: ViewStyle = {
@@ -95,7 +89,7 @@ const ALERTVIEWT: ViewStyle = {
   shadowOpacity: 0.25,
   shadowRadius: 3.84,
   elevation: 5,
-  height: '60%',
+  height: '70%',
   width: '90%',
 }
 
@@ -111,16 +105,18 @@ const INPUT: TextStyle = {
 }
 const ALERTTEXT: TextStyle = {
   textAlignVertical: 'center',
+  width: '100%',
   textAlign: "center",
   fontWeight: '500',
   fontSize: 22,
   color: color.palette.white
 }
 const HEADERMODAL: ViewStyle = {
-  flexDirection: 'row',
   width: '100%',
-  alignItems: 'center',
+  alignItems: 'flex-end',
   justifyContent: 'space-between',
+  height: 60,
+  paddingHorizontal: 7
 }
 const SEPARATE: ViewStyle = {
   width: 32,
@@ -170,29 +166,61 @@ export const DemoScreen = observer(function DemoScreen() {
   const [image, setImage] = useState('')
   const [title, setTitle] = useState('')
   const [date, setDate] = useState((new Date().getDate() < 10 ? '0' : '') + new Date().getDate().toString() + '/' + (new Date().getMonth() + 1).toString() + '/' + new Date().getFullYear().toString())
-  const [amount_spent, setAmount_spent] = useState(0)
+  const [amount_spent, setAmount_spent] = useState('')
   const [user_id, setUser_id] = useState(null)
   const [tax_coupon_one, setTax_coupon_one] = useState('')
   const [tax_coupon_two, setTax_coupon_two] = useState('')
   const [tax_coupon_three, setTax_coupon_three] = useState('')
   const [tax_coupon_four, setTax_coupon_four] = useState('')
   const [tax_coupon_five, setTax_coupon_five] = useState('')
+  const [cash, setCash] = useState('')
   const [showAlert, setShowAlert] = useState(false)
   const [newEvent, setNewEvent] = useState(false)
   const isDrawerOpen = useIsDrawerOpen()
   const [datePiker, setDatePicker] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const socket = useMemo(() => socketio(sock), [])
+
+  useEffect(() => {
+    socket.on('cash', data =>
+      setCash(data)
+    )
+    socket.on('event', data =>{
+      console.log(data)
+      events.push(data)
+    })
+  }, [events])
 
   async function loadEvents() {
     const response = await api.get('event')
-    console.log(response.data.events)
     setEvents(response.data.events)
+
+    const cash = await api.get('cash')
+    setCash(cash.data.cash.amount)
   }
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
+      //aspect: [16, 24],
+      quality: 1,
+      base64: true
+    })
+
+    console.log(result)
+
+    if (!result.cancelled) {
+      setTax_coupon_one(result.base64)
+    }
+  }
+  
+  const takePhoto = async () => {
+    ImagePicker.getCameraPermissionsAsync()
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      //aspect: [16, 24],
       quality: 1,
       base64: true
     })
@@ -222,17 +250,57 @@ export const DemoScreen = observer(function DemoScreen() {
     setDatePicker(false)
   };
 
+  async function handleSubmit() {
+    if (title == '') {
+      Alert.alert('Erro ao registrar', 'Por favor, informe o título deste evento')
+    } else if (amount_spent == '') {
+      Alert.alert('Erro ao registrar', 'Por favor, informe o valor gasto para este evento')
+    }else {
+      setNewEvent(false)
+      setLoading(true)
+      const data = {
+        title,
+        amount_spent,
+        date,
+        tax_coupon_one,
+        tax_coupon_two,
+        tax_coupon_three,
+        tax_coupon_four,
+        tax_coupon_five,
+        user_id: user.id
+      }
+
+      try {
+        const response = await api.post('event', data)
+        console.log(response.data.message),
+        
+        setLoading(false)
+        setNewEvent(false)
+        Alert.alert('Sucesso!!!', response.data.message)
+        setTitle(''),
+        setAmount_spent(''),
+        setTax_coupon_one(''),
+        setTax_coupon_two(''),
+        setTax_coupon_three(''),
+        setTax_coupon_four(''),
+        setTax_coupon_five('')
+      }catch(err){
+        setLoading(false)
+        console.log(err)
+        Alert.alert('Erro ao registrar', 'Por favor, tente novamente')
+      }
+    }
+  }
+
   useEffect(() => {
     async function retrieveData() {
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestCameraRollPermissionsAsync()
-        if (status !== 'granted') {
-          Alert.alert('Sorry, we need camera roll permissions to make this work!')
-        }
-      }
+      setLoading(true)
       const response = await api.get('event')
-      console.log(response.data.events)
       setEvents(response.data.events)
+      const cash = await api.get('cash')
+      console.log(cash.data)
+      setCash(cash.data.cash.amount)
+      setLoading(false)
       const myArray = await AsyncStorage.getItem('user')
       if (myArray !== null) {
         // We have data!!
@@ -240,12 +308,25 @@ export const DemoScreen = observer(function DemoScreen() {
         setUser(usuário)
         setName(usuário.name.split(" ")[0])
       }
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestCameraRollPermissionsAsync()
+        if (status !== 'granted') {
+          Alert.alert('Sorry, we need camera roll permissions to make this work!')
+        }
+      }
     };
     retrieveData()
   }, [])
 
   return (
     <View style={FULL}>
+      <Spinner
+        visible={loading}
+        textContent={'Loading...'}
+        animation={'slide'}
+        textStyle={{ color: '#FFF' }}
+        overlayColor={'rgba(0,0,0,0.80)'}
+      />
       <Modal
         visible={newEvent}
         transparent={true}
@@ -254,23 +335,18 @@ export const DemoScreen = observer(function DemoScreen() {
         <View style={ALERTCENTEREDT}>
           <View style={{ ...ALERTVIEWT, height: '70%' }}>
             <View style={HEADERMODAL}>
-              <HeaderButton name='null' onPress={() => { setNewEvent(false) }} />
               <Text style={ALERTTEXT}> Adicionar evento </Text>
-              <HeaderButton name='close' onPress={() => { setNewEvent(false) }} />
+              <HeaderButton style={{position: 'absolute', top: 0, right: 8}} name='close' onPress={() => { setNewEvent(false) }} />
             </View>
-            <TextInput style={INPUT} placeholderTextColor={color.palette.cyan} multiline={false} autoCapitalize='words' value={title} onChangeText={setTitle} placeholder='Título do Evento' />
+            <TextInput style={INPUT} keyboardAppearance='dark' placeholderTextColor={color.palette.cyan} multiline={false} autoCapitalize='words' value={title} onChangeText={setTitle} placeholder='Título do Evento' />
             <TextInput style={{ ...INPUT, textAlign: 'center' }}
               placeholderTextColor={color.palette.cyan}
               keyboardType='decimal-pad'
+              keyboardAppearance='dark'
+              returnKeyType='done'
               multiline={false}
               autoCapitalize='none'
-              value={
-                Intl.NumberFormat('pt-BR',
-                  {
-                    style: 'currency',
-                    currency: 'BRL'
-                  }).format(amount_spent)
-              }
+              value={amount_spent}
               onChangeText={setAmount_spent}
               placeholder='Valor Utilizado'
             />
@@ -280,26 +356,32 @@ export const DemoScreen = observer(function DemoScreen() {
               onConfirm={handleDatePicked}
               onCancel={() => { setDatePicker(false) }}
             />
-            <TouchableOpacity
-              onPress={pickImage}
-              style={{
-                height: 'auto',
-                alignItems: 'center',
-                width: '33%',
-                marginBottom: 8,
-                marginRight: 10,
-                padding: 1,
+            <View style={{flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'center'}}>
+              <View style={{
+                width: 100, 
+                height: 100, 
+                alignItems: 'center', 
+                justifyContent: 'center',
                 borderRadius: 8,
                 borderWidth: 0.3,
                 borderColor: color.palette.offWhite,
-              }}>
-
-              <Image
-                style={{ width: '100%', height: 100, borderRadius: 15 }}
-                source={{ uri: `data:image/gif;base64,${tax_coupon_one}` }}
-                resizeMode='contain' />
-            </TouchableOpacity>
-            <CommonButton name='Salvar Evento' style={{ width: '50%' }} textStyle={{ fontSize: 22 }} onPress={() => { }} background={color.palette.cyan} preset="primary" />
+                }}
+              >
+                {tax_coupon_one ? 
+                  <Image
+                  style={{ width: 100, height: 100 }}
+                  source={ { uri: `data:image/gif;base64,${tax_coupon_one}` } }
+                  resizeMode='contain' />
+                  :
+                  <Text style={{width: 80, fontSize: 10, textAlign: 'center'}}> Selecione uma imagem ou tire uma foto da nota </Text>
+                }
+              </View>
+              <View style={{height: 90, justifyContent: 'space-around', marginLeft: 10}}>
+                <Feather name='camera' onPress={takePhoto} size={32} color={color.palette.offWhite} />
+                <Feather name='paperclip' onPress={pickImage} size={32} color={color.palette.offWhite} />
+              </View>
+            </View>
+            <CommonButton name='Salvar Evento' style={{ width: '50%' }} textStyle={{ fontSize: 22 }} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
           </View>
         </View>
       </Modal>
@@ -310,30 +392,24 @@ export const DemoScreen = observer(function DemoScreen() {
         onRequestClose={ () => { setShowAlert(false) } } >
         <View style={ALERTCENTEREDT}>
           {content === 'image' ? (
-            <TouchableOpacity activeOpacity={5} onPress={() => { setContent('infos') }}style={{ ...ALERTCENTEREDT, backgroundColor: 'rgba(0,0,0,0.80)', width: '90%' }}>
+            <TouchableOpacity activeOpacity={5} onPress={() => { setContent('infos') }}style={{ ...ALERTCENTEREDT, backgroundColor: 'rgba(0,0,0,0.0)', width: '90%' }}>
               <Image
-                style={{ width: '100%', height: '80%', borderRadius: 15 }}
+                style={{ width: '100%', height: '90%', borderRadius: 15 }}
                 source={{ uri: `data:image/gif;base64,${image}` }}
                 resizeMode='contain' />
             </TouchableOpacity>
           )
             : <View style={ALERTVIEWT}>
               <View style={HEADERMODAL}>
-                <HeaderButton name='null' onPress={() => { setShowAlert(false) }} />
+                <HeaderButton  name='close' onPress={() => { setShowAlert(false) }} />
                 <Text style={ALERTTEXT}> {event.title} </Text>
-                <HeaderButton name='close' onPress={() => { setShowAlert(false) }} />
               </View>
 
               <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite, marginTop: 15 }}>Data do evento</Text>
               <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite }}>{event.date}</Text>
 
               <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite, marginTop: 15 }}>Valor Utilizado</Text>
-              <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite }}>{
-                Intl.NumberFormat('pt-BR',
-                  {
-                    style: 'currency',
-                    currency: 'BRL'
-                  }).format(event.amount_spent)}
+              <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite }}>{ event.amount_spent }
               </Text>
               <Text style={{ fontWeight: '400', marginBottom: 12, fontSize: 20, color: color.palette.offWhite, marginTop: 15 }} preset="fieldLabelTitle" text="Anexos" />
               <ScrollView contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }} style={{ width: '100%', height: 'auto' }}>
@@ -354,10 +430,10 @@ export const DemoScreen = observer(function DemoScreen() {
 
                     <Image
                       style={{ width: '100%', height: 100, borderRadius: 15 }}
-                      source={{ uri: `data:image/gif;base64,${event.tax_coupon_one}` }}
+                      source={{ uri: `data:image/gif;base64,${event.tax_coupon_one}`}}
                       resizeMode='contain' />
                   </TouchableOpacity>
-                  {event.tax_coupon_two !== null ? (
+                  {event.tax_coupon_two !== '' ? (
                     <TouchableOpacity
                       onPress={() => { setContent('image'), setImage(event.tax_coupon_two) } }
                       style={{
@@ -379,7 +455,7 @@ export const DemoScreen = observer(function DemoScreen() {
                   ) : null
                   }
                 </View>
-                {event.tax_coupon_three !== null ? (
+                {event.tax_coupon_three !== '' ? (
                   <View style={{ width: '100%', height: 120, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                     <TouchableOpacity
                       onPress={() => { setContent('image'); setImage(event.tax_coupon_three) } }
@@ -400,7 +476,7 @@ export const DemoScreen = observer(function DemoScreen() {
                         source={{ uri: `data:image/gif;base64,${event.tax_coupon_three}` }}
                         resizeMode='contain' />
                     </TouchableOpacity>
-                    {event.tax_coupon_four !== null ? (
+                    {event.tax_coupon_four !== '' ? (
                       <TouchableOpacity
                         onPress={() => { setContent('image'), setImage(event.tax_coupon_four) } }
                         style={{
@@ -445,7 +521,8 @@ export const DemoScreen = observer(function DemoScreen() {
             marginVertical: 5
           }}
           >
-            Valor em caixa <Text style={{ fontWeight: '600', color: '#333', fontSize: 20, }}>R$100,00</Text>
+            Valor em caixa <Text style={{ fontWeight: '600', color: '#333', fontSize: 20, }}>
+                R$ {cash}  </Text>
           </Text>
           <Text style={{
             fontWeight: '500',
@@ -455,6 +532,7 @@ export const DemoScreen = observer(function DemoScreen() {
             width: '100%',
             textAlign: 'center',
           }}>Eventos</Text>
+          {events.length > 0 ?
           <FlatList
             data={ events }
             style={{
@@ -487,6 +565,20 @@ export const DemoScreen = observer(function DemoScreen() {
               </TouchableOpacity>
             )}
           />
+          : 
+            <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+              <Text style={{ 
+              textAlign: 'center', 
+              width: '100%',
+              fontWeight: '500', 
+              color: color.palette.cyan ,
+              marginBottom: 15
+              }}> 
+              Nenhum evento lançado ainda 
+              </Text>
+              <Feather name='meh' size={50} color={color.palette.cyan} />
+            </View>
+          }
           {user.admin === true ? (
             <TouchableOpacity onPress={() => { setNewEvent(true) }} style={FAB}>
               <Text style={FABICON}>+</Text>

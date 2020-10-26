@@ -7,13 +7,14 @@
  *
  * You'll likely spend most of your time in this file.
  */
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { createStackNavigator } from "@react-navigation/stack"
 import { createDrawerNavigator, DrawerItemList } from '@react-navigation/drawer'
 import Feather from '@expo/vector-icons/Feather'
-import { WelcomeScreen, DemoScreen, SignUp, Users } from "../screens"
+import { WelcomeScreen, DemoScreen, SignUp, Users, CashIn, Profile, ContactUs, Payment } from "../screens"
 import { useNavigation } from "@react-navigation/native"
 import AsyncStorage from "@react-native-community/async-storage"
+import socketio from 'socket.io-client'
 import { SafeAreaView, Text, Image, View, Alert } from "react-native"
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler"
 import { Icon, HeaderButton } from "../components"
@@ -21,7 +22,7 @@ import { color } from "../theme/color"
 import * as ImagePicker from 'expo-image-picker'
 import Constants from 'expo-constants'
 import * as Permissions from 'expo-permissions'
-import { api } from "../services/api"
+import { sock } from "../services/api"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -42,6 +43,10 @@ export type PrimaryParamList = {
   home: undefined
   signUp: undefined
   users: undefined
+  cashIn: undefined
+  profile: undefined
+  contactUs: undefined
+  payment: undefined
 }
 
 // Documentation: https://reactnavigation.org/docs/stack-navigator/
@@ -51,6 +56,11 @@ const Draw = createDrawerNavigator<PrimaryParamList>()
 export function Drawer() {
   const [user, setUser] = useState([])
   const navigation = useNavigation()
+  const socket = useMemo(() => socketio(sock), [])
+
+  useEffect(() => {
+    
+  }, [])
   function logout() {
     AsyncStorage.clear()
     navigation.navigate('welcome')
@@ -63,54 +73,13 @@ export function Drawer() {
         // We have data!!
         const usuário = JSON.parse(myArray)
         setUser(usuário)
+        socket.on(usuário.id, data =>{
+          setUser(data)
+        })
       }
     };
     retrieveData()
   }, [])
-
-  const getPermissionAsync = async () => {
-    if (Constants.platform.ios) {
-      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL)
-      if (status !== 'granted') {
-        Alert.alert('Sorry, we need camera roll permissions to make this work!')
-      }
-    }
-  }
-
-  // const _pickImage = async () => {
-  //   try {
-  //     const result = await ImagePicker.launchImageLibraryAsync({
-  //       mediaTypes: ImagePicker.MediaTypeOptions.All,
-  //       allowsEditing: true,
-  //       aspect: [1, 1],
-  //       quality: 0,
-  //       base64: true
-  //     })
-
-  //     if (!result.cancelled) {
-  //       const avatar = result.base64
-  //       try {
-  //         const value = await AsyncStorage.getItem('id')
-  //         if (value != null) {
-  //           const response = await api.put(`/users/${user.id}`, {
-  //             name: user.name,
-  //             email: user.email,
-  //             avatar,
-  //             password: user.password
-  //           })
-  //           Alert.alert('Sucesso!!!', response.data.message)
-
-  //           const data = await api.get(`users/${user.id}`)
-  //           setUser(response.data.user)
-  //         }
-  //       } catch (error) {
-  //         console.log(error)
-  //       }
-  //     }
-  //   } catch (E) {
-  //     console.log(E)
-  //   }
-  // }
 
   const customDrawerComponent = props => (
     <SafeAreaView style={{
@@ -137,10 +106,6 @@ export function Drawer() {
           </TouchableOpacity>
         </View>
         <DrawerItemList {...props} />
-        <TouchableOpacity onPress={() => {}} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
-          <Feather name='dollar-sign' size={25} color='#FFF' />
-          <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Entradas</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={logout} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
           <Feather name='log-out' size={25} color='#FFF' />
           <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Sair</Text>
@@ -150,7 +115,8 @@ export function Drawer() {
   )
 
   return (
-    <Draw.Navigator initialRouteName="home"
+    <Draw.Navigator 
+      initialRouteName="home"
       drawerPosition='right'
       drawerContent= {customDrawerComponent}
       drawerContentOptions={{
@@ -178,6 +144,14 @@ export function Drawer() {
             iconName = 'user-plus'
           } else if (route.name === 'users') {
             iconName = 'users'
+          } else if (route.name === 'cashIn') {
+            iconName = 'dollar-sign'
+          } else if (route.name === 'profile') {
+            iconName = 'user'
+          } else if (route.name === 'contactUs') {
+            iconName = 'message-circle'
+          } else if (route.name === 'payment') {
+            iconName = 'trending-up'
           }
 
           // You can return any component that you like here!
@@ -186,8 +160,16 @@ export function Drawer() {
       })}
     >
       <Draw.Screen name="home" options={{ title: 'Início' }} component={DemoScreen} />
-      <Draw.Screen name="signUp" options={{ title: 'Registrar Membro' }} component={SignUp} />
+      <Draw.Screen name="profile" options={{ title: 'Editar Perfil' }} component={Profile} />
+      {user.admin === true &&
+        <Draw.Screen name="signUp" options={{ title: 'Registrar Membro' }} component={SignUp} />
+      }
+      {user.admin === true &&
+        <Draw.Screen name="cashIn" options={{ title: 'Entradas' }} component={CashIn} />
+      }
       <Draw.Screen name="users" options={{ title: 'Panda Team' }} component={Users} />
+      <Draw.Screen name="contactUs" options={{ title: 'Sugestões e Melhorias' }} component={ContactUs} />
+      <Draw.Screen name="payment" options={{ title: 'Infos de Transferência' }} component={Payment} />
     </Draw.Navigator>
   )
 }

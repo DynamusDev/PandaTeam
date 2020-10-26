@@ -35,8 +35,9 @@ const HEADER_TITLE: TextStyle = {
 const INPUT: TextStyle = {
   height: 45,
   width: 280,
+  height: 200,
   borderRadius: 8,
-  textAlign: 'center',
+  padding: 10,
   fontSize: 22,
   marginTop: 12,
   backgroundColor: '#E2E2E0'
@@ -82,40 +83,28 @@ const HEADERMODAL: ViewStyle = {
   marginBottom: 20
 }
 
-const timeToString = (time) => {
-  const date = new Date(time)
-  return date.toISOString().split('T')[0]
-}
-
-export const SignUp = observer(function SignUp() {
+export const ContactUs = observer(function ContactUs() {
   const navigation = useNavigation()
   const goBack = () => navigation.goBack()
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
-  const [admin, setAdmin] = useState(false)
+  const [suggestion, setSugestion] = useState('')
   const [spinner, setSpinner] = useState(false)
   const [user, setUser] = useState([])
   const hoje = new Date()
   const isDrawerOpen = useIsDrawerOpen()
 
   async function handleSubmit() {
-    if (name === '') {
+    if (suggestion === '') {
       Alert.alert('Erro ao registrar!', 'Por favor, informe o nome do membro para continuarmos com o registro')
-    } else if (email === '') {
-      Alert.alert('Erro ao registrar!', 'Por favor, informe o email do membro para continuarmos com o registro')
     } else {
       try {
         setSpinner(true)
-        const response = await api.post('sign_up', {
-          name,
-          email,
-          admin
+        const response = await api.post('contact_us', {
+          suggestion,
+          user_id: user.id
         })
         if (response.data.status === 200) {
           Alert.alert('Sucesso!!!', response.data.message)
-          setEmail('')
-          setName('')
-          setAdmin(false)
+          setSugestion('')
           setSpinner(false)
         } else if (response.data.status === 400) {
           setSpinner(false)
@@ -153,9 +142,9 @@ export const SignUp = observer(function SignUp() {
         textStyle={{ color: '#FFF' }}
         overlayColor={'rgba(0,0,0,0.80)'}
       />
-      <Screen style={CONTAINER} preset="fixed" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
+      <Screen style={CONTAINER} preset="scroll" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
         <Header
-          headerText='Cadastrar Novo Membro'
+          headerText='Sugestões e Melhorias'
           style={HEADER}
           titleStyle={HEADER_TITLE}
           rightIcon='menu'
@@ -163,19 +152,10 @@ export const SignUp = observer(function SignUp() {
         />
         <View style={CONTENT}>
           <Icon name='newPanda' style={{ height: 100, width: 200, backgroundColor: color.transparent }}/>
-          <Text style={{ color: '#fff', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Recrutamos pessoas fortes para um time excepcional!</Text>
-          <TextInput style={INPUT} multiline={false} autoCapitalize='words' value={name} onChangeText={setName} placeholder='Nome Completo' />
-          <TextInput style={INPUT} autoCompleteType='email' keyboardType='email-address' multiline={false} autoCapitalize='none' value={email} onChangeText={setEmail} placeholder='Email' />
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 40, width: '100%'  }}>
-            <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Este usuário é um admin?</Text>
-            <CheckBox
-              style={{ padding: 10 }}
-              onClick={() => { setAdmin(!admin) }}
-              isChecked={admin}
-              leftText={"Este usuário é um adm?"}
-            />
-          </View>
-          <CommonButton name="Registrar Membro" style={{ width: '50%' }} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
+          <Text style={{ color: '#fff', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Digite abaixo sugestões para melhorias e até mesmo críticas para o nosso sistema!</Text>
+          <TextInput style={INPUT} keyboardType='default' multiline={true} autoCapitalize='none' value={suggestion} onChangeText={setSugestion} placeholder='' />
+          
+          <CommonButton name="Enviar Sugestão" style={{ width: '50%' }} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
         </View>
       </Screen>
     </View>

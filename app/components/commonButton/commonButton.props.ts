@@ -15,6 +15,10 @@ export interface ButtonProps extends TouchableOpacityProps {
 
   icon?: string
 
+  loading?: boolean
+
+  disabled?: boolean
+
   /**
    * An optional style override useful for padding & margin.
    */

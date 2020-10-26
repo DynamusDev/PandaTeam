@@ -8,7 +8,19 @@ import AsyncStorage from "@react-native-community/async-storage"
 import { useNavigation } from "@react-navigation/native"
 import { observer } from "mobx-react-lite"
 import React, { FunctionComponent as Component, useEffect, useState } from "react"
-import { Alert, SafeAreaView, TextInput, TextStyle, TouchableOpacity, View, ViewStyle, Modal } from "react-native"
+import { 
+        Alert, 
+        SafeAreaView, 
+        TextInput, 
+        TextStyle, 
+        TouchableOpacity, 
+        View, 
+        ViewStyle, 
+        Modal, 
+        KeyboardAvoidingView, 
+        Platform,
+        ActivityIndicator
+      } from "react-native"
 import Spinner from 'react-native-loading-spinner-overlay'
 import { CommonButton, Icon, Screen, Text, HeaderButton } from "../../components"
 import { api } from '../../services/api'
@@ -172,7 +184,8 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
       setEmailP('')
       setSpinner(false)
       setModalVisible(false)
-    } catch {
+    } catch(err) {
+      console.log(err)
       Alert.alert('Erro ao enviar!!!', 'Tente novamente')
       setSpinner(false)
     }
@@ -210,45 +223,46 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
 
   return (
     <View style={FULL}>
-      <Spinner
-        visible={spinner}
-        textContent={'Loading...'}
-        animation={'slide'}
-        textStyle={{ color: '#FFF' }}
-        overlayColor={'rgba(0,0,0,0.80)'}
-      />
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType={"fade"}
-        onRequestClose={ () => { setModalVisible(false) } } >
-        <View style={ALERTCENTERED}>
-          <View style={ALERTVIEW}>
-            <View style={HEADERMODAL}>
-              <HeaderButton name='close' onPress={() => { setModalVisible(false) }} />
-            </View>
-            <Text style={ALERTTEXT}>Informe seu email</Text>
-            <TextInput
-              style={{ ...INPUT, width: '100%' }}
-              autoCompleteType='email'
-              keyboardType='email-address'
-              multiline={false}
-              autoCapitalize='none'
-              value={emailP}
-              onChangeText={setEmailP}
-              placeholder='Email'
-            />
-            <CommonButton
-              name="Enviar"
-              background={color.palette.Emergência}
-              onPress={() => {
-                forgotPassword()
-              }}
-            />
-          </View>
-        </View>
-      </Modal>
       <Screen style={CONTAINER} statusBar='light-content' barBackground={color.palette.cyan} preset="scroll" backgroundColor={color.palette.cyan}>
+        <Modal
+          visible={modalVisible}
+          transparent={true}
+          animationType={"fade"}
+          onRequestClose={ () => { setModalVisible(false) } } >
+          <View style={ALERTCENTERED}>
+              <KeyboardAvoidingView 
+                style={ALERTVIEW}
+                enabled
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              >
+                <View style={HEADERMODAL}>
+                  <HeaderButton name='close' onPress={() => { setModalVisible(false) }} />
+                </View>
+                  <Text style={ALERTTEXT}>Informe seu email</Text>
+                  <TextInput
+                    style={{ ...INPUT, width: '100%' }}
+                    autoCompleteType='email'
+                    keyboardType='email-address'
+                    multiline={false}
+                    autoCapitalize='none'
+                    value={emailP}
+                    onChangeText={setEmailP}
+                    placeholder='Email'
+                  />
+                  <CommonButton
+                    name="Enviar"
+                    loading={spinner}
+                    background={color.palette.Emergência}
+                    onPress={() => {
+                      console.log('clicou')
+                      forgotPassword()
+                    }}
+                  >
+
+                  </CommonButton>
+              </KeyboardAvoidingView>
+          </View>
+        </Modal>
         <Icon name='panda' style={{ height: 100, width: 200, backgroundColor: color.transparent }}/>
         <TextInput style={INPUT} autoCompleteType='email' keyboardType='email-address' multiline={false} autoCapitalize='none' value={email} onChangeText={setEmail} placeholder='Email' />
         <View style={PASS}>
@@ -258,14 +272,14 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
             <Icon name={icon} style={{ height: 24, width: 24 }}/>
           </TouchableOpacity>
         </View>
-        <CommonButton name="Login" onPress={handleSubmit} background={color.palette.green} preset="primary" />
+        <CommonButton name="Login" loading={spinner} onPress={handleSubmit} background={color.palette.green} preset="primary" />
         <CommonButton name="Esqueci minha senha" style={{ width: 'auto', marginTop: 0 }} textStyle={{ color: '#fff', textDecorationLine: 'underline' }} onPress={() => { setModalVisible(true) }} background={color.transparent} preset="primary" />
       </Screen>
       <SafeAreaView style={FOOTER}>
         <View style={FOOTER_CONTENT}>
           <View style={CREDITOS}>
             <Text style={POWERED}>
-              Powered by Genuine Tech
+              Powered by Ekta
             </Text>
           </View>
         </View>

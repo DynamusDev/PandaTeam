@@ -4,12 +4,16 @@ import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
 import * as Types from "./api.types"
 import axios from 'axios'
 
+// DEVELOPMENT MODE
+// const url = 'https://0b8c66643b66.ngrok.io'
+// PRUDUCTION MODE
+const url = 'https://panda-team.herokuapp.com'
+
 export const api = axios.create({
-  // Development Mode
-  // baseURL: 'http://192.168.15.21:3333'
-  // Production Mode
-  baseURL: 'https://panda-team.herokuapp.com'
+  baseURL: url
 })
+
+export const sock = url
 
 /**
  * Manages all requests to the API.

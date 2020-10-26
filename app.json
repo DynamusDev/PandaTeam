@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Pandas",
+    "name": "Panda Cash&Fun",
     "slug": "Pandas",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,6 +21,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "android": {
+      "package": "com.dynamusdev.Pandas"
     }
   }
 }

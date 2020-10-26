@@ -1,5 +1,5 @@
 import React from "react"
-import { TouchableOpacity } from "react-native"
+import { TouchableOpacity, ActivityIndicator } from "react-native"
 import { Text } from "../text/text"
 import { viewPresets, textPresets } from "./commonButton.presets"
 import { ButtonProps } from "./commonButton.props"
@@ -17,6 +17,8 @@ export function CommonButton(props: ButtonProps) {
     tx,
     name,
     background,
+    loading,
+    disabled,
     style: styleOverride,
     textStyle: textStyleOverride,
     children,
@@ -29,10 +31,10 @@ export function CommonButton(props: ButtonProps) {
   )
 
   return (
-    <TouchableOpacity style={{ ...viewStyle, backgroundColor: background }} {...rest}>
-      {
-        name &&
-          <Text tx={tx} text={name} style={textStyle} />
+    <TouchableOpacity disabled={loading ? true : false} style={{ ...viewStyle, backgroundColor: background }} {...rest}>
+      
+      {loading ?
+        <ActivityIndicator color='#FFF'/> : name && <Text tx={tx} text={name} style={textStyle} />
       }
     </TouchableOpacity>
   )

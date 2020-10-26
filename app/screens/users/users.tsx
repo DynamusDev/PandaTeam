@@ -169,33 +169,28 @@ export const Users = observer(function Users() {
   const [showAlert, setShowAlert] = useState(false)
   const [spinner, setSpinner] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
+  const [userForExclude, setUserForExclude] = useState(null)
   const [users, setUsers] = useState([])
   const [user, setUser] = useState([])
   const hoje = new Date()
   const isDrawerOpen = useIsDrawerOpen()
 
-  useEffect(() => {
-    async function retrieveData() {
-      const myArray = await AsyncStorage.getItem('user')
-      if (myArray !== null) {
-        // We have data!!
-        const usuário = JSON.parse(myArray)
-        setUser(usuário)
-      }
-      const response = await api.get('users')
-      console.log(response.data.users)
-      setUsers(response.data.users)
-    };
-    retrieveData()
-  }, [])
+  async function loadUsers() {
+    const response = await api.get('users')
+    setUsers(response.data.users)
+  };
 
-  async function deleteUser(users) {
+  async function deleteUser(item) {
+    setSpinner(true)
     try {
-      await api.delete(`users/${users.id}`)
+      const delet = await api.delete(`users/${item.id}`)
       const response = await api.get('users')
       setUsers(response.data.users)
+      setSpinner(false)
       Alert.alert('Sucesso!!!', 'O usuário foi deletado do sistema')
     } catch (err) {
+      console.log(err)
+      setSpinner(false)
       Alert.alert('Erro ao excluir usuário', 'Por favor, tente novamente')
     }
   }
@@ -221,9 +216,9 @@ export const Users = observer(function Users() {
           setName('')
           setId('')
           setAdmin(false)
-          setSpinner(false)
           const users = await api.get('users')
           setUsers(users.data.users)
+          setSpinner(false)
         } else if (response.data.status === 400) {
           setSpinner(false)
           Alert.alert('Erro ao registrar!!!', response.data.error)
@@ -286,15 +281,33 @@ export const Users = observer(function Users() {
                 <Text style={ALERTTEXT}>Editar Usuário</Text>
                 <HeaderButton name='close' onPress={() => { setShowAlert(false) }} />
               </View>
-              <TextInput style={INPUT} multiline={false} autoCapitalize='words' value={name} onChangeText={setName} placeholder='Nome Completo' />
-              <TextInput style={INPUT} autoCompleteType='email' keyboardType='email-address' multiline={false} autoCapitalize='none' value={email} onChangeText={setEmail} placeholder='Email' />
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <TextInput
+                style={INPUT} 
+                multiline={false} 
+                autoCapitalize='words' 
+                value={name} 
+                onChangeText={setName} 
+                placeholderTextColor={color.palette.cyan} 
+                placeholder='Nome' 
+              />
+              <TextInput 
+                style={INPUT} 
+                autoCompleteType='email' 
+                keyboardType='email-address' 
+                multiline={false} 
+                autoCapitalize='none' 
+                value={email} 
+                onChangeText={setEmail} 
+                placeholderTextColor={color.palette.cyan} 
+                placeholder='Email' 
+              />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 40, width: '100%' }}>
                 {admin === true ? (
                   <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Retirar os privilégios de admin?</Text>
                 ) : <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Tornar este usuário um admin?</Text>
                 }
                 <CheckBox
-                  style={{ padding: 10 }}
+                  style={{ padding: 10, height: 10 }}
                   onClick={() => { setAdmin(!admin) }}
                   isChecked={admin}
                   leftText={"Este usuário é um adm?"}
@@ -319,9 +332,11 @@ export const Users = observer(function Users() {
               alignItems: 'center',
               justifyContent: 'center'
             }}
+            refreshing={false}
+            onRefresh={loadUsers}
             showsVerticalScrollIndicator={false}
-            keyExtractor={user => String(user)}
-            renderItem={({ item: users }) => (
+            keyExtractor={item => String(item.id)}
+            renderItem={({ item }) => (
               <View style={{
                 maxHeight: 100,
                 alignItems: 'center',
@@ -347,36 +362,60 @@ export const Users = observer(function Users() {
                       borderColor: '#000',
                       marginRight: 20,
                     }}
-                    source={{ uri: `data:image/gif;base64,${users.avatar}` }}
+                    source={{ uri: `data:image/gif;base64,${item.avatar}` }}
                     resizeMode='contain'/>
                   <View>
-                    <Text style={{ color: '#58595B', fontSize: 20, fontWeight: 'bold' }}>{users.name}</Text>
-                    <Text style={{ color: '#58595B', fontSize: 15 }}>{users.email}</Text>
+                    <Text style={{ color: '#58595B', fontSize: 20, fontWeight: 'bold' }}>{item.name}</Text>
+                    <Text style={{ color: '#58595B', fontSize: 15, width: 230 }}>{item.email}</Text>
                   </View>
                 </TouchableOpacity>
-                {user.admin === true ? (
-                  <View style={{ flexDirection: 'row' }}>
+                {user.admin === true && user.id !== item.id ? (
+                  <View style={{ flexDirection: 'row', width: '40%', justifyContent: 'space-between' }}>
                     <TouchableOpacity
                       style={{
                         height: 30,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        width: '20%',
+                        width: 'auto',
                       }}
-                      onPress={() => { Alert.alert('teste', 'teste') }}
+                      onPress={() => { 
+                        setId(item.id)
+                        setName(item.name)
+                        setEmail(item.email)
+                        setAdmin(item.admin)
+                        setShowAlert(true) 
+                      }}
                     >
-                      <Text style={{ color: '#58595B', fontSize: 15 }}>editar</Text>
+                      <Text style={{ color: color.palette.orange, fontSize: 15 }}>editar</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={{
                         height: 30,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        width: '20%',
+                        width: 'auto',
                       }}
-                      onPress={() => { Alert.alert('teste', 'teste') }}
+                      //onPress={(item) => { deleteUser(item)}}
+                      onPress={() =>{
+                        Alert.alert(
+                          'Atenção',
+                          'Tem certeza de que deseja excluir este usuário do sistema?',
+                          [
+                            {
+                              text: 'Sim, excluir',
+                              onPress: () => { deleteUser(item)}
+                            },
+                            {
+                              text: 'Cancelar',
+                              onPress: () => console.log('Cancel Pressed'),
+                              style: 'cancel'
+                            },
+                          ],
+                          { cancelable: false }
+                        );
+                      }}
                     >
-                      <Text style={{ color: '#58595B', fontSize: 15 }}>excluir</Text>
+                      <Text style={{ color: color.palette.Emergência, fontSize: 15 }}>excluir</Text>
                     </TouchableOpacity>
                   </View>
                 ) : null

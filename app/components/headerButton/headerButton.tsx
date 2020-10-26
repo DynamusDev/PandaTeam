@@ -29,10 +29,10 @@ export function HeaderButton(props: ButtonProps) {
   const viewStyle = mergeAll(flatten([viewPresets[preset] || viewPresets.primary, styleOverride]))
 
   return (
-    <TouchableOpacity style={viewStyle} {...rest}>
+    <TouchableOpacity style={{...viewStyle, height: 32, width: 32}} {...rest}>
       {
         name &&
-          <Icon name={name} style={{ height: 32 || { height }, width: 32 }} />
+          <Icon width={32} height={32} name={name} style={{ height: 32 || { height }, width: 32 }} />
       }
     </TouchableOpacity>
   )

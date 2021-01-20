@@ -90,7 +90,8 @@ export const Payment = observer(function Payment() {
   const [visible, setVisible] = useState(false)
 
   const agencia = '2552'
-  const conta = '0002969-2'
+  const conta = '02773-8'
+  const pix = '304.037.278-55'
 
 
   return (
@@ -104,6 +105,28 @@ export const Payment = observer(function Payment() {
           onRightPress={() => { navigation.openDrawer() }}
         />
         <View style={CONTENT}>
+            <TouchableOpacity onLongPress={() => {Clipboard.setString(pix), setVisible(true)}} style={{alignItems: 'center'}}>
+              <Text style={{ 
+                    textAlign: 'center', 
+                    width: '100%',
+                    fontWeight: 'bold', 
+                    color: color.palette.cyan ,
+                    marginBottom: 10,
+                    fontSize: 18
+                    }}> 
+                    Chave Pix
+              </Text>
+              <Text style={{ 
+                textAlign: 'center', 
+                width: '100%',
+                fontWeight: '400', 
+                color: color.palette.cyan ,
+                marginBottom: 10,
+                fontSize: 18
+                }}> 
+                {pix}
+              </Text>
+            </TouchableOpacity>
             <Text style={{ 
                     textAlign: 'center', 
                     width: '100%',
@@ -186,7 +209,7 @@ export const Payment = observer(function Payment() {
               marginBottom: 10,
               fontSize: 18
               }}> 
-              JAQUELINE MELO KURAMOTO
+              VANESSA GONÇALVES
             </Text>
             <Snackbar
               visible={visible}

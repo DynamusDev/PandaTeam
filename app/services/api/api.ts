@@ -5,15 +5,15 @@ import * as Types from "./api.types"
 import axios from 'axios'
 
 // DEVELOPMENT MODE
-// const url = 'https://0b8c66643b66.ngrok.io'
+// const url = 'https://88d63cc4949b.ngrok.io';
 // PRUDUCTION MODE
 const url = 'https://panda-team.herokuapp.com'
 
 export const api = axios.create({
   baseURL: url
-})
+});
 
-export const sock = url
+export const sock = url;
 
 /**
  * Manages all requests to the API.

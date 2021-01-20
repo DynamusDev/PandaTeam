@@ -22,6 +22,7 @@ import {
         ActivityIndicator
       } from "react-native"
 import Spinner from 'react-native-loading-spinner-overlay'
+import getPushNotificationPermissions from "../../utils/notification";
 import { CommonButton, Icon, Screen, Text, HeaderButton } from "../../components"
 import { api } from '../../services/api'
 import { color, spacing } from "../../theme"
@@ -147,6 +148,7 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
   const [spinner, setSpinner] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [message, setMessage] = useState('')
+  const [notificationExpo, setNotificationExpo] = useState(null);
   const navigation = useNavigation()
   const nextScreen = () => navigation.navigate("demo")
 
@@ -154,6 +156,10 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
 
   useEffect(() => {
     navigate()
+    getPushNotificationPermissions().then((token) =>{
+      setNotificationExpo(token),
+      console.log(token)
+    });
   }, [])
 
   async function navigate() {
@@ -194,10 +200,12 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
   async function handleSubmit() {
     try {
       setSpinner(true)
-      const response = await api.post('login', {
+      const data = {
         email,
         password,
-      })
+      }
+      const response = await api.post('login', data)
+      console.log(data, response.data)
       if (response.data.status === 200) {
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user))
         navigation.navigate("drawer")

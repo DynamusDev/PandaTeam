@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "Panda Cash&Fun",
-    "slug": "Pandas",
-    "version": "1.0.0",
+    "slug": "mobile",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -17,13 +17,14 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "com.dynamusdev.Pandas"
+      "bundleIdentifier": "com.dynamusdev.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "android": {
-      "package": "com.dynamusdev.Pandas"
+      "package": "com.dynamusdev.mobile",
+      "useNextNotificationsApi": true
     }
   }
 }

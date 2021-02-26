@@ -7,7 +7,7 @@
 import AsyncStorage from "@react-native-community/async-storage"
 import { useNavigation } from "@react-navigation/native"
 import { observer } from "mobx-react-lite"
-import React, { FunctionComponent as Component, useEffect, useState } from "react"
+import React, { FunctionComponent as Component, useEffect, useState, useRef } from "react"
 import { 
         Alert, 
         SafeAreaView, 
@@ -27,7 +27,17 @@ import { CommonButton, Icon, Screen, Text, HeaderButton } from "../../components
 import { api } from '../../services/api'
 import { color, spacing } from "../../theme"
 import { useAuth } from '../../hooks/auth'
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 console.disableYellowBox = true
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const FULL: ViewStyle = { flex: 1 }
 const CONTAINER: ViewStyle = {
@@ -148,18 +158,66 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
   const [spinner, setSpinner] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [message, setMessage] = useState('')
-  const [notificationExpo, setNotificationExpo] = useState(null);
+  const [notification_token, setNotificationExpo] = useState(null);
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
   const navigation = useNavigation()
   const nextScreen = () => navigation.navigate("demo")
 
   const { signIn } = useAuth()
 
+  async function registerForPushNotificationsAsync() {
+  let token;
+  if (Constants.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+  setNotificationExpo(token)
+
+  return token;
+}
+
   useEffect(() => {
     navigate()
-    getPushNotificationPermissions().then((token) =>{
-      setNotificationExpo(token),
-      console.log(token)
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      return setNotification(notification);
     });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener);
+      Notifications.removeNotificationSubscription(responseListener);
+    };
   }, [])
 
   async function navigate() {
@@ -203,8 +261,9 @@ export const WelcomeScreen: Component = observer(function WelcomeScreen() {
       const data = {
         email,
         password,
+        notification_token
       }
-      const response = await api.post('login', data)
+      const response = await api.patch('login', data)
       console.log(data, response.data)
       if (response.data.status === 200) {
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user))

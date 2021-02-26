@@ -16,7 +16,6 @@ import { NavigationContainerRef } from "@react-navigation/native"
 import { SafeAreaProvider, initialWindowSafeAreaInsets } from "react-native-safe-area-context"
 import { initFonts } from "./theme/fonts"
 import * as storage from "./utils/storage"
-import getPushNotificationPermissions from "./utils/notification";
 import {
   useBackButtonHandler,
   RootNavigator,
@@ -50,10 +49,9 @@ function App() {
 
   // Kick off initial async loading actions, like loading fonts and RootStore
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       await initFonts()
       setupRootStore().then(setRootStore)
-      getPushNotificationPermissions();
     })()
   }, [])
 

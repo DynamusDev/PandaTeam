@@ -72,6 +72,7 @@
     "reactotron-react-js": "^5.0.0",
     "reactotron-react-native": "^5.0.0",
     "socket.io-client": "^2.3.1",
+    "styled-components": "^5.2.1",
     "validate.js": "0.13.1"
   },
   "devDependencies": {

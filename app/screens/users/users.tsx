@@ -14,7 +14,7 @@ import {
 } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { observer } from "mobx-react-lite"
-import { Header, Text, Screen, CommonButton, HeaderButton } from "../../components"
+import { Header, Text, Screen, CommonButton, HeaderButton, Loading } from "../../components"
 import { color, spacing } from "../../theme"
 import { api } from "../../services/api"
 import { useIsDrawerOpen } from '@react-navigation/drawer'
@@ -176,8 +176,10 @@ export const Users = observer(function Users() {
   const isDrawerOpen = useIsDrawerOpen()
 
   async function loadUsers() {
+    setSpinner(true)
     const response = await api.get('users')
     setUsers(response.data.users)
+    setSpinner(false)
   };
 
   async function deleteUser(item) {
@@ -250,6 +252,7 @@ export const Users = observer(function Users() {
 
   return (
     <View style={FULL}>
+      
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -261,170 +264,166 @@ export const Users = observer(function Users() {
           </View>
         </View>
       </Modal>
-      <Spinner
-        visible={spinner}
-        textContent={'Loading...'}
-        animation={'slide'}
-        textStyle={ { color: '#FFF' } }
-        overlayColor={'rgba(0,0,0,0.80)'}
-      />
-      <Screen style={CONTAINER} preset="fixed" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
-        <Modal
-          visible={showAlert}
-          transparent={true}
-          animationType={"fade"}
-          onRequestClose={ () => { setShowAlert(false) } } >
-          <View style={ALERTCENTEREDT}>
-            <View style={ALERTVIEWT}>
-              <View style={HEADERMODAL}>
-                <View style={SEPARATE} />
-                <Text style={ALERTTEXT}>Editar Usuário</Text>
-                <HeaderButton name='close' onPress={() => { setShowAlert(false) }} />
-              </View>
-              <TextInput
-                style={INPUT} 
-                multiline={false} 
-                autoCapitalize='words' 
-                value={name} 
-                onChangeText={setName} 
-                placeholderTextColor={color.palette.cyan} 
-                placeholder='Nome' 
-              />
-              <TextInput 
-                style={INPUT} 
-                autoCompleteType='email' 
-                keyboardType='email-address' 
-                multiline={false} 
-                autoCapitalize='none' 
-                value={email} 
-                onChangeText={setEmail} 
-                placeholderTextColor={color.palette.cyan} 
-                placeholder='Email' 
-              />
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 40, width: '100%' }}>
-                {admin === true ? (
-                  <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Retirar os privilégios de admin?</Text>
-                ) : <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Tornar este usuário um admin?</Text>
-                }
-                <CheckBox
-                  style={{ padding: 10, height: 10 }}
-                  onClick={() => { setAdmin(!admin) }}
-                  isChecked={admin}
-                  leftText={"Este usuário é um adm?"}
+      {
+        spinner && <Loading text='Carregando' animation={Platform.OS === 'ios' ? 'panda' : 'rocket'}/>
+      }
+          <Screen style={CONTAINER} preset="fixed" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
+          <Modal
+            visible={showAlert}
+            transparent={true}
+            animationType={"fade"}
+            onRequestClose={ () => { setShowAlert(false) } } >
+            <View style={ALERTCENTEREDT}>
+              <View style={ALERTVIEWT}>
+                <View style={HEADERMODAL}>
+                  <View style={SEPARATE} />
+                  <Text style={ALERTTEXT}>Editar Usuário</Text>
+                  <HeaderButton name='close' onPress={() => { setShowAlert(false) }} />
+                </View>
+                <TextInput
+                  style={INPUT} 
+                  multiline={false} 
+                  autoCapitalize='words' 
+                  value={name} 
+                  onChangeText={setName} 
+                  placeholderTextColor={color.palette.cyan} 
+                  placeholder='Nome' 
                 />
+                <TextInput 
+                  style={INPUT} 
+                  autoCompleteType='email' 
+                  keyboardType='email-address' 
+                  multiline={false} 
+                  autoCapitalize='none' 
+                  value={email} 
+                  onChangeText={setEmail} 
+                  placeholderTextColor={color.palette.cyan} 
+                  placeholder='Email' 
+                />
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 40, width: '100%' }}>
+                  {admin === true ? (
+                    <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Retirar os privilégios de admin?</Text>
+                  ) : <Text style={{ color: '#333', marginVertical: 10, textAlign: 'center', fontSize: 18 }}>Tornar este usuário um admin?</Text>
+                  }
+                  <CheckBox
+                    style={{ padding: 10, height: 10 }}
+                    onClick={() => { setAdmin(!admin) }}
+                    isChecked={admin}
+                    leftText={"Este usuário é um adm?"}
+                  />
+                </View>
+                <CommonButton name="Atualizar" style={{ width: '50%' }} onPress={() => { handleSubmit() }} background={color.palette.cyan} preset="primary" />
               </View>
-              <CommonButton name="Atualizar" style={{ width: '50%' }} onPress={() => { handleSubmit() }} background={color.palette.cyan} preset="primary" />
             </View>
-          </View>
-        </Modal>
-        <Header
-          headerText='Panda Team!!! '
-          style={HEADER}
-          titleStyle={HEADER_TITLE}
-          rightIcon='menu'
-          onRightPress={() => { navigation.openDrawer() }}
-        />
-        <View style={CONTENT}>
-          <FlatList
-            data={ users }
-            style={USERLIST}
-            contentContainerStyle={{
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            refreshing={false}
-            onRefresh={loadUsers}
-            showsVerticalScrollIndicator={false}
-            keyExtractor={item => String(item.id)}
-            renderItem={({ item }) => (
-              <View style={{
-                maxHeight: 100,
-                alignItems: 'center',
-                backgroundColor: '#E6E7E8',
-                marginTop: 15,
-                width: 350,
-                borderRadius: 10,
-              }}>
-                <TouchableOpacity
-                  onPress={() => { }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 5,
-                    paddingVertical: 5,
-                    borderRadius: 10,
-                  }}>
-                  <Image
-                    style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: 30,
-                      borderColor: '#000',
-                      marginRight: 20,
-                    }}
-                    source={{ uri: `data:image/gif;base64,${item.avatar}` }}
-                    resizeMode='contain'/>
-                  <View>
-                    <Text style={{ color: '#58595B', fontSize: 20, fontWeight: 'bold' }}>{item.name}</Text>
-                    <Text style={{ color: '#58595B', fontSize: 15, width: 230 }}>{item.email}</Text>
-                  </View>
-                </TouchableOpacity>
-                {user.admin === true && user.id !== item.id ? (
-                  <View style={{ flexDirection: 'row', width: '40%', justifyContent: 'space-between' }}>
-                    <TouchableOpacity
-                      style={{
-                        height: 30,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 'auto',
-                      }}
-                      onPress={() => { 
-                        setId(item.id)
-                        setName(item.name)
-                        setEmail(item.email)
-                        setAdmin(item.admin)
-                        setShowAlert(true) 
-                      }}
-                    >
-                      <Text style={{ color: color.palette.orange, fontSize: 15 }}>editar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{
-                        height: 30,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 'auto',
-                      }}
-                      //onPress={(item) => { deleteUser(item)}}
-                      onPress={() =>{
-                        Alert.alert(
-                          'Atenção',
-                          'Tem certeza de que deseja excluir este usuário do sistema?',
-                          [
-                            {
-                              text: 'Sim, excluir',
-                              onPress: () => { deleteUser(item)}
-                            },
-                            {
-                              text: 'Cancelar',
-                              onPress: () => console.log('Cancel Pressed'),
-                              style: 'cancel'
-                            },
-                          ],
-                          { cancelable: false }
-                        );
-                      }}
-                    >
-                      <Text style={{ color: color.palette.Emergência, fontSize: 15 }}>excluir</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null
-                }
-              </View>
-            )}
+          </Modal>
+          <Header
+            headerText='Panda Team!!! '
+            style={HEADER}
+            titleStyle={HEADER_TITLE}
+            rightIcon='menu'
+            onRightPress={() => { navigation.openDrawer() }}
           />
-        </View>
-      </Screen>
+          <View style={CONTENT}>
+            <FlatList
+              data={ users }
+              style={USERLIST}
+              contentContainerStyle={{
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              refreshing={false}
+              onRefresh={loadUsers}
+              showsVerticalScrollIndicator={false}
+              keyExtractor={item => String(item.id)}
+              renderItem={({ item }) => (
+                <View style={{
+                  maxHeight: 100,
+                  alignItems: 'center',
+                  backgroundColor: '#E6E7E8',
+                  marginTop: 15,
+                  width: 350,
+                  borderRadius: 10,
+                }}>
+                  <TouchableOpacity
+                    onPress={() => { }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 5,
+                      paddingVertical: 5,
+                      borderRadius: 10,
+                    }}>
+                    <Image
+                      style={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 30,
+                        borderColor: '#000',
+                        marginRight: 20,
+                      }}
+                      source={{ uri: `data:image/gif;base64,${item.avatar}` }}
+                      resizeMode='contain'/>
+                    <View>
+                      <Text style={{ color: '#58595B', fontSize: 20, fontWeight: 'bold' }}>{item.name}</Text>
+                      <Text style={{ color: '#58595B', fontSize: 15, width: 230 }}>{item.email}</Text>
+                    </View>
+                  </TouchableOpacity>
+                  {user.admin === true && user.id !== item.id ? (
+                    <View style={{ flexDirection: 'row', width: '40%', justifyContent: 'space-between' }}>
+                      <TouchableOpacity
+                        style={{
+                          height: 30,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 'auto',
+                        }}
+                        onPress={() => { 
+                          setId(item.id)
+                          setName(item.name)
+                          setEmail(item.email)
+                          setAdmin(item.admin)
+                          setShowAlert(true) 
+                        }}
+                      >
+                        <Text style={{ color: color.palette.orange, fontSize: 15 }}>editar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          height: 30,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 'auto',
+                        }}
+                        //onPress={(item) => { deleteUser(item)}}
+                        onPress={() =>{
+                          Alert.alert(
+                            'Atenção',
+                            'Tem certeza de que deseja excluir este usuário do sistema?',
+                            [
+                              {
+                                text: 'Sim, excluir',
+                                onPress: () => { deleteUser(item)}
+                              },
+                              {
+                                text: 'Cancelar',
+                                onPress: () => console.log('Cancel Pressed'),
+                                style: 'cancel'
+                              },
+                            ],
+                            { cancelable: false }
+                          );
+                        }}
+                      >
+                        <Text style={{ color: color.palette.Emergência, fontSize: 15 }}>excluir</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null
+                  }
+                </View>
+              )}
+            />
+          </View>
+        </Screen>
     </View>
   )
 })

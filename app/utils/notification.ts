@@ -1,5 +1,6 @@
 import { Notifications } from "expo";
 import * as Permissions from "expo-permissions";
+import { Notifications as Notifications2 } from 'expo';
 import { Platform } from 'react-native'
 
 const getPushNotificationPermissions = async () => {

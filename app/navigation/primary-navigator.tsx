@@ -22,7 +22,7 @@ import { color } from "../theme/color"
 import * as ImagePicker from 'expo-image-picker'
 import Constants from 'expo-constants'
 import * as Permissions from 'expo-permissions'
-import { sock } from "../services/api"
+import { sock, api } from "../services/api"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -81,6 +81,17 @@ export function Drawer() {
     retrieveData()
   }, [])
 
+  async function remember() {
+    try{
+      const response = await api.get('remember')
+      if(response.data.status === 200){
+        console.log(response.data.message)
+      }
+    }catch(err){
+      console.log(err)
+    }
+  }
+
   const customDrawerComponent = props => (
     <SafeAreaView style={{
       flex: 1,
@@ -106,6 +117,13 @@ export function Drawer() {
           </TouchableOpacity>
         </View>
         <DrawerItemList {...props} />
+        {
+          user.admin &&
+            <TouchableOpacity onPress={remember} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
+              <Feather name='bell' size={25} color='#FFF' />
+              <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Reminder</Text>
+            </TouchableOpacity>
+        }
         <TouchableOpacity onPress={logout} style={{ height: 40, flexDirection: 'row', justifyContent: 'flex-start', width: '100%', paddingHorizontal: 17, marginTop: 15 }}>
           <Feather name='log-out' size={25} color='#FFF' />
           <Text style={{ color: '#fff', fontWeight: '500', height: '100%', marginTop: 5, marginLeft: 35 }}>Sair</Text>

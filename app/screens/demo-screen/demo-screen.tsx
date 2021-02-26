@@ -7,7 +7,7 @@ import React, { useEffect, useState, useMemo } from "react"
 import { Image, ImageStyle, Platform, TextStyle, View, ViewStyle, AsyncStorage, Alert, TouchableOpacity, Modal } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { observer } from "mobx-react-lite"
-import { BulletItem, Button, Header, Text, Screen, Wallpaper, HeaderButton, CommonButton } from "../../components"
+import { Loading, Button, Header, Text, Screen, Wallpaper, HeaderButton, CommonButton } from "../../components"
 import { color, spacing } from "../../theme"
 import socketio from 'socket.io-client'
 import Feather from '@expo/vector-icons/Feather'
@@ -165,7 +165,7 @@ export const DemoScreen = observer(function DemoScreen() {
   const [event, setEvent] = useState([])
   const [image, setImage] = useState('')
   const [title, setTitle] = useState('')
-  const [date, setDate] = useState((new Date().getDate() < 10 ? '0' : '') + new Date().getDate().toString() + '/' + (new Date().getMonth() + 1).toString() + '/' + new Date().getFullYear().toString())
+  const [date, setDate] = useState((new Date().getDate() < 10 ? '0' : '') + new Date().getDate().toString() + '/' + (new Date().getMonth() < 10 ? '0' : '') + (new Date().getMonth() + 1).toString() + '/' + new Date().getFullYear().toString())
   const [amount_spent, setAmount_spent] = useState('')
   const [user_id, setUser_id] = useState(null)
   const [tax_coupon_one, setTax_coupon_one] = useState('')
@@ -320,272 +320,283 @@ export const DemoScreen = observer(function DemoScreen() {
 
   return (
     <View style={FULL}>
-      <Spinner
+      {/* <Spinner
         visible={loading}
         textContent={'Loading...'}
         animation={'slide'}
         textStyle={{ color: '#FFF' }}
         overlayColor={'rgba(0,0,0,0.80)'}
-      />
-      <Modal
-        visible={newEvent}
-        transparent={true}
-        animationType={"fade"}
-        onRequestClose={ () => { setNewEvent(false) } } >
-        <View style={ALERTCENTEREDT}>
-          <View style={{ ...ALERTVIEWT, height: '70%' }}>
-            <View style={HEADERMODAL}>
-              <Text style={ALERTTEXT}> Adicionar evento </Text>
-              <HeaderButton style={{position: 'absolute', top: 0, right: 8}} name='close' onPress={() => { setNewEvent(false) }} />
-            </View>
-            <TextInput style={INPUT} keyboardAppearance='dark' placeholderTextColor={color.palette.cyan} multiline={false} autoCapitalize='words' value={title} onChangeText={setTitle} placeholder='Título do Evento' />
-            <TextInput style={{ ...INPUT, textAlign: 'center' }}
-              placeholderTextColor={color.palette.cyan}
-              keyboardType='decimal-pad'
-              keyboardAppearance='dark'
-              returnKeyType='done'
-              multiline={false}
-              autoCapitalize='none'
-              value={amount_spent}
-              onChangeText={setAmount_spent}
-              placeholder='Valor Utilizado'
-            />
-            <CommonButton name={date} style={{ width: '83%' }} textStyle={{ fontSize: 22, color: color.palette.cyan }} onPress={() => { setDatePicker(true) }} background={color.palette.green} preset="primary" />
-            <DateTimePicker
-              isVisible={datePiker}
-              onConfirm={handleDatePicked}
-              onCancel={() => { setDatePicker(false) }}
-            />
-            <View style={{flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'center'}}>
-              <View style={{
-                width: 100, 
-                height: 100, 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                borderRadius: 8,
-                borderWidth: 0.3,
-                borderColor: color.palette.offWhite,
-                }}
-              >
-                {tax_coupon_one ? 
-                  <Image
-                  style={{ width: 100, height: 100 }}
-                  source={ { uri: `data:image/gif;base64,${tax_coupon_one}` } }
-                  resizeMode='contain' />
-                  :
-                  <Text style={{width: 80, fontSize: 10, textAlign: 'center'}}> Selecione uma imagem ou tire uma foto da nota </Text>
-                }
-              </View>
-              <View style={{height: 90, justifyContent: 'space-around', marginLeft: 10}}>
-                <Feather name='camera' onPress={takePhoto} size={32} color={color.palette.offWhite} />
-                <Feather name='paperclip' onPress={pickImage} size={32} color={color.palette.offWhite} />
-              </View>
-            </View>
-            <CommonButton name='Salvar Evento' style={{ width: '50%' }} textStyle={{ fontSize: 22 }} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        visible={showAlert}
-        transparent={true}
-        animationType={"fade"}
-        onRequestClose={ () => { setShowAlert(false) } } >
-        <View style={ALERTCENTEREDT}>
-          {content === 'image' ? (
-            <TouchableOpacity activeOpacity={5} onPress={() => { setContent('infos') }}style={{ ...ALERTCENTEREDT, backgroundColor: 'rgba(0,0,0,0.0)', width: '90%' }}>
-              <Image
-                style={{ width: '100%', height: '90%', borderRadius: 15 }}
-                source={{ uri: `data:image/gif;base64,${image}` }}
-                resizeMode='contain' />
-            </TouchableOpacity>
-          )
-            : <View style={ALERTVIEWT}>
-              <View style={HEADERMODAL}>
-                <HeaderButton  name='close' onPress={() => { setShowAlert(false) }} />
-                <Text style={ALERTTEXT}> {event.title} </Text>
-              </View>
-
-              <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite, marginTop: 15 }}>Data do evento</Text>
-              <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite }}>{event.date}</Text>
-
-              <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite, marginTop: 15 }}>Valor Utilizado</Text>
-              <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite }}>{ event.amount_spent }
-              </Text>
-              <Text style={{ fontWeight: '400', marginBottom: 12, fontSize: 20, color: color.palette.offWhite, marginTop: 15 }} preset="fieldLabelTitle" text="Anexos" />
-              <ScrollView contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }} style={{ width: '100%', height: 'auto' }}>
-                <View style={{ width: '100%', height: 120, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                  <TouchableOpacity
-                    onPress={() => { setContent('image'); setImage(event.tax_coupon_one) } }
-                    style={{
-                      height: 'auto',
-                      alignItems: 'center',
-                      width: '33%',
-                      marginBottom: 8,
-                      marginRight: 10,
-                      padding: 1,
-                      borderRadius: 8,
-                      borderWidth: 0.3,
-                      borderColor: color.palette.offWhite,
-                    }}>
-
-                    <Image
-                      style={{ width: '100%', height: 100, borderRadius: 15 }}
-                      source={{ uri: `data:image/gif;base64,${event.tax_coupon_one}`}}
-                      resizeMode='contain' />
-                  </TouchableOpacity>
-                  {event.tax_coupon_two !== '' ? (
-                    <TouchableOpacity
-                      onPress={() => { setContent('image'), setImage(event.tax_coupon_two) } }
-                      style={{
-                        height: 'auto',
-                        alignItems: 'center',
-                        width: '33%',
-                        marginBottom: 8,
-                        padding: 1,
+      /> */}
+      {
+        loading ? 
+          <Loading text='Carregando' animation={Platform.OS === 'ios' ? 'panda' : 'rocket'}/>
+            : 
+            <>
+              <Modal
+                visible={newEvent}
+                transparent={true}
+                animationType={"fade"}
+                onRequestClose={ () => { setNewEvent(false) } } >
+                <View style={ALERTCENTEREDT}>
+                  <View style={{ ...ALERTVIEWT, height: '70%' }}>
+                    <View style={HEADERMODAL}>
+                      <Text style={ALERTTEXT}> Adicionar evento </Text>
+                      <HeaderButton style={{position: 'absolute', top: 0, right: 8}} name='close' onPress={() => { setNewEvent(false) }} />
+                    </View>
+                    <TextInput style={INPUT} keyboardAppearance='dark' placeholderTextColor={color.palette.cyan} multiline={false} autoCapitalize='words' value={title} onChangeText={setTitle} placeholder='Título do Evento' />
+                    <TextInput style={{ ...INPUT, textAlign: 'center' }}
+                      placeholderTextColor={color.palette.cyan}
+                      keyboardType='decimal-pad'
+                      keyboardAppearance='dark'
+                      returnKeyType='done'
+                      multiline={false}
+                      autoCapitalize='none'
+                      value={amount_spent}
+                      onChangeText={setAmount_spent}
+                      placeholder='Valor Utilizado'
+                    />
+                    <CommonButton name={date} style={{ width: '83%' }} textStyle={{ fontSize: 22, color: color.palette.cyan }} onPress={() => { setDatePicker(true) }} background={color.palette.green} preset="primary" />
+                    <DateTimePicker
+                      isVisible={datePiker}
+                      onConfirm={handleDatePicked}
+                      mode="date"
+                      isDarkModeEnabled={false}
+                      style={{alignItems: 'center', height: 300}}
+                      onCancel={() => { setDatePicker(false) }}
+                      
+                    />
+                    <View style={{flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                      <View style={{
+                        width: 100, 
+                        height: 100, 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
                         borderRadius: 8,
                         borderWidth: 0.3,
                         borderColor: color.palette.offWhite,
-                      }}>
-
+                        }}
+                      >
+                        {tax_coupon_one ? 
+                          <Image
+                          style={{ width: 100, height: 100 }}
+                          source={ { uri: `data:image/gif;base64,${tax_coupon_one}` } }
+                          resizeMode='contain' />
+                          :
+                          <Text style={{width: 80, fontSize: 10, textAlign: 'center'}}> Selecione uma imagem ou tire uma foto da nota </Text>
+                        }
+                      </View>
+                      <View style={{height: 90, justifyContent: 'space-around', marginLeft: 10}}>
+                        <Feather name='camera' onPress={takePhoto} size={32} color={color.palette.offWhite} />
+                        <Feather name='paperclip' onPress={pickImage} size={32} color={color.palette.offWhite} />
+                      </View>
+                    </View>
+                    <CommonButton name='Salvar Evento' style={{ width: '50%' }} textStyle={{ fontSize: 22 }} onPress={handleSubmit} background={color.palette.cyan} preset="primary" />
+                  </View>
+                </View>
+              </Modal>
+              <Modal
+                visible={showAlert}
+                transparent={true}
+                animationType={"fade"}
+                onRequestClose={ () => { setShowAlert(false) } } >
+                <View style={ALERTCENTEREDT}>
+                  {content === 'image' ? (
+                    <TouchableOpacity activeOpacity={5} onPress={() => { setContent('infos') }}style={{ ...ALERTCENTEREDT, backgroundColor: 'rgba(0,0,0,0.0)', width: '90%' }}>
                       <Image
-                        style={{ width: '100%', height: 100, borderRadius: 15 }}
-                        source={{ uri: `data:image/gif;base64,${event.tax_coupon_two}` }}
+                        style={{ width: '100%', height: '90%', borderRadius: 15 }}
+                        source={{ uri: `data:image/gif;base64,${image}` }}
                         resizeMode='contain' />
                     </TouchableOpacity>
-                  ) : null
+                  )
+                    : <View style={ALERTVIEWT}>
+                      <View style={HEADERMODAL}>
+                        <HeaderButton  name='close' onPress={() => { setShowAlert(false) }} />
+                        <Text style={ALERTTEXT}> {event.title} </Text>
+                      </View>
+
+                      <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite, marginTop: 15 }}>Data do evento</Text>
+                      <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite }}>{event.date}</Text>
+
+                      <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite, marginTop: 15 }}>Valor Utilizado</Text>
+                      <Text style={{ fontWeight: '400', fontSize: 20, color: color.palette.offWhite }}>{ event.amount_spent }
+                      </Text>
+                      <Text style={{ fontWeight: '400', marginBottom: 12, fontSize: 20, color: color.palette.offWhite, marginTop: 15 }} preset="fieldLabelTitle" text="Anexos" />
+                      <ScrollView contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }} style={{ width: '100%', height: 'auto' }}>
+                        <View style={{ width: '100%', height: 120, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                          <TouchableOpacity
+                            onPress={() => { setContent('image'); setImage(event.tax_coupon_one) } }
+                            style={{
+                              height: 'auto',
+                              alignItems: 'center',
+                              width: '33%',
+                              marginBottom: 8,
+                              marginRight: 10,
+                              padding: 1,
+                              borderRadius: 8,
+                              borderWidth: 0.3,
+                              borderColor: color.palette.offWhite,
+                            }}>
+
+                            <Image
+                              style={{ width: '100%', height: 100, borderRadius: 15 }}
+                              source={{ uri: `data:image/gif;base64,${event.tax_coupon_one}`}}
+                              resizeMode='contain' />
+                          </TouchableOpacity>
+                          {event.tax_coupon_two !== '' ? (
+                            <TouchableOpacity
+                              onPress={() => { setContent('image'), setImage(event.tax_coupon_two) } }
+                              style={{
+                                height: 'auto',
+                                alignItems: 'center',
+                                width: '33%',
+                                marginBottom: 8,
+                                padding: 1,
+                                borderRadius: 8,
+                                borderWidth: 0.3,
+                                borderColor: color.palette.offWhite,
+                              }}>
+
+                              <Image
+                                style={{ width: '100%', height: 100, borderRadius: 15 }}
+                                source={{ uri: `data:image/gif;base64,${event.tax_coupon_two}` }}
+                                resizeMode='contain' />
+                            </TouchableOpacity>
+                          ) : null
+                          }
+                        </View>
+                        {event.tax_coupon_three !== '' ? (
+                          <View style={{ width: '100%', height: 120, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <TouchableOpacity
+                              onPress={() => { setContent('image'); setImage(event.tax_coupon_three) } }
+                              style={{
+                                height: 'auto',
+                                alignItems: 'center',
+                                width: '33%',
+                                marginBottom: 8,
+                                marginRight: 10,
+                                padding: 1,
+                                borderRadius: 8,
+                                borderWidth: 0.3,
+                                borderColor: color.palette.offWhite,
+                              }}>
+
+                              <Image
+                                style={{ width: '100%', height: 100, borderRadius: 15 }}
+                                source={{ uri: `data:image/gif;base64,${event.tax_coupon_three}` }}
+                                resizeMode='contain' />
+                            </TouchableOpacity>
+                            {event.tax_coupon_four !== '' ? (
+                              <TouchableOpacity
+                                onPress={() => { setContent('image'), setImage(event.tax_coupon_four) } }
+                                style={{
+                                  height: 'auto',
+                                  alignItems: 'center',
+                                  width: '33%',
+                                  marginBottom: 8,
+                                  padding: 1,
+                                  borderRadius: 8,
+                                  borderWidth: 0.3,
+                                  borderColor: color.palette.offWhite,
+                                }}>
+
+                                <Image
+                                  style={{ width: '100%', height: 100, borderRadius: 15 }}
+                                  source={{ uri: `data:image/gif;base64,${event.tax_coupon_four}` }}
+                                  resizeMode='contain' />
+                              </TouchableOpacity>
+                            ) : null
+                            }
+                          </View>
+                        ) : null}
+                      </ScrollView>
+                    </View>
                   }
                 </View>
-                {event.tax_coupon_three !== '' ? (
-                  <View style={{ width: '100%', height: 120, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                    <TouchableOpacity
-                      onPress={() => { setContent('image'); setImage(event.tax_coupon_three) } }
-                      style={{
-                        height: 'auto',
-                        alignItems: 'center',
-                        width: '33%',
-                        marginBottom: 8,
-                        marginRight: 10,
-                        padding: 1,
-                        borderRadius: 8,
-                        borderWidth: 0.3,
-                        borderColor: color.palette.offWhite,
-                      }}>
-
-                      <Image
-                        style={{ width: '100%', height: 100, borderRadius: 15 }}
-                        source={{ uri: `data:image/gif;base64,${event.tax_coupon_three}` }}
-                        resizeMode='contain' />
-                    </TouchableOpacity>
-                    {event.tax_coupon_four !== '' ? (
+              </Modal>
+              <Screen style={CONTAINER} preset="fixed" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
+                <Header
+                  headerText={`Olá, ${name}`}
+                  style={HEADER}
+                  titleStyle={HEADER_TITLE}
+                  rightIcon='menu'
+                  onRightPress={() => { navigation.openDrawer() }}
+                />
+                <View style={CONTENT}>
+                  <Text style={{
+                    color: '#333',
+                    width: '100%',
+                    textAlign: 'center',
+                    fontSize: 20,
+                    marginVertical: 5
+                  }}
+                  >
+                    Valor em caixa <Text style={{ fontWeight: 'bold', color: '#333', fontSize: 20, }}>
+                        R$ {cash}  </Text>
+                  </Text>
+                  <Text style={{
+                    fontWeight: '500',
+                    color: color.palette.cyan,
+                    fontSize: 25,
+                    marginTop: 15,
+                    width: '100%',
+                    textAlign: 'center',
+                  }}>Eventos</Text>
+                  {events.length > 0 ?
+                  <FlatList
+                    data={ events }
+                    style={{
+                      flex: 1
+                    }}
+                    contentContainerStyle={{
+                      alignItems: 'center'
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    keyExtractor={event => String(event.id)}
+                    onEndReached={loadEvents}
+                    onEndReachedThreshold={0.2}
+                    renderItem={({ item: event }) => (
                       <TouchableOpacity
-                        onPress={() => { setContent('image'), setImage(event.tax_coupon_four) } }
-                        style={{
-                          height: 'auto',
-                          alignItems: 'center',
-                          width: '33%',
-                          marginBottom: 8,
-                          padding: 1,
-                          borderRadius: 8,
-                          borderWidth: 0.3,
-                          borderColor: color.palette.offWhite,
-                        }}>
-
-                        <Image
-                          style={{ width: '100%', height: 100, borderRadius: 15 }}
-                          source={{ uri: `data:image/gif;base64,${event.tax_coupon_four}` }}
-                          resizeMode='contain' />
+                        style={EVENTCONTAINER}
+                        onPress={() => {
+                          setEvent(event)
+                          setShowAlert(true)
+                          setContent('infos')
+                        }}
+                      >
+                        <View style={INFOS}>
+                          <Text style={{ fontWeight: '300', fontSize: 35, color: color.palette.cyan }}>{event.date.split("/")[0]}</Text>
+                          <Text style={{ fontWeight: '300', fontSize: 15, color: color.palette.cyan }}>{event.date.split("/")[1] + '/' + event.date.split("/")[2]}</Text>
+                        </View>
+                        <View style={INFOS}>
+                          <Text style={{ color: '#333', fontWeight: '500' }}>{event.title}</Text>
+                          <Text style={{ color: '#333', fontWeight: '200', fontStyle: 'italic', marginTop: 10 }}>Clique aqui para ver mais detalhes</Text>
+                        </View>
                       </TouchableOpacity>
-                    ) : null
-                    }
-                  </View>
-                ) : null}
-              </ScrollView>
-            </View>
-          }
-        </View>
-      </Modal>
-      <Screen style={CONTAINER} preset="fixed" statusBar='light-content' barBackground={isDrawerOpen ? (color.palette.green) : color.palette.cyan} backgroundColor={color.palette.cyan}>
-        <Header
-          headerText={`Olá, ${name}`}
-          style={HEADER}
-          titleStyle={HEADER_TITLE}
-          rightIcon='menu'
-          onRightPress={() => { navigation.openDrawer() }}
-        />
-        <View style={CONTENT}>
-          <Text style={{
-            color: '#333',
-            width: '100%',
-            textAlign: 'center',
-            fontSize: 20,
-            marginVertical: 5
-          }}
-          >
-            Valor em caixa <Text style={{ fontWeight: '600', color: '#333', fontSize: 20, }}>
-                R$ {cash}  </Text>
-          </Text>
-          <Text style={{
-            fontWeight: '500',
-            color: color.palette.cyan,
-            fontSize: 25,
-            marginTop: 15,
-            width: '100%',
-            textAlign: 'center',
-          }}>Eventos</Text>
-          {events.length > 0 ?
-          <FlatList
-            data={ events }
-            style={{
-              flex: 1
-            }}
-            contentContainerStyle={{
-              alignItems: 'center'
-            }}
-            showsVerticalScrollIndicator={false}
-            keyExtractor={event => String(event.id)}
-            onEndReached={loadEvents}
-            onEndReachedThreshold={0.2}
-            renderItem={({ item: event }) => (
-              <TouchableOpacity
-                style={EVENTCONTAINER}
-                onPress={() => {
-                  setEvent(event)
-                  setShowAlert(true)
-                  setContent('infos')
-                }}
-              >
-                <View style={INFOS}>
-                  <Text style={{ fontWeight: '300', fontSize: 35, color: color.palette.cyan }}>{event.date.split("/")[0]}</Text>
-                  <Text style={{ fontWeight: '300', fontSize: 15, color: color.palette.cyan }}>{event.date.split("/")[1] + '/' + event.date.split("/")[2]}</Text>
+                    )}
+                  />
+                  : 
+                    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                      <Text style={{ 
+                      textAlign: 'center', 
+                      width: '100%',
+                      fontWeight: '500', 
+                      color: color.palette.cyan ,
+                      marginBottom: 15
+                      }}> 
+                      Nenhum evento lançado ainda 
+                      </Text>
+                      <Feather name='meh' size={50} color={color.palette.cyan} />
+                    </View>
+                  }
+                  {user.admin === true ? (
+                    <TouchableOpacity onPress={() => { setNewEvent(true) }} style={FAB}>
+                      <Text style={FABICON}>+</Text>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
-                <View style={INFOS}>
-                  <Text style={{ color: '#333', fontWeight: '500' }}>{event.title}</Text>
-                  <Text style={{ color: '#333', fontWeight: '200', fontStyle: 'italic', marginTop: 10 }}>Clique aqui para ver mais detalhes</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
-          : 
-            <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-              <Text style={{ 
-              textAlign: 'center', 
-              width: '100%',
-              fontWeight: '500', 
-              color: color.palette.cyan ,
-              marginBottom: 15
-              }}> 
-              Nenhum evento lançado ainda 
-              </Text>
-              <Feather name='meh' size={50} color={color.palette.cyan} />
-            </View>
-          }
-          {user.admin === true ? (
-            <TouchableOpacity onPress={() => { setNewEvent(true) }} style={FAB}>
-              <Text style={FABICON}>+</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      </Screen>
+              </Screen>
+            </>
+      }
     </View>
   )
 })

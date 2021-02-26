@@ -5,7 +5,7 @@ import * as Types from "./api.types"
 import axios from 'axios'
 
 // DEVELOPMENT MODE
-// const url = 'https://88d63cc4949b.ngrok.io';
+// const url = 'http://192.168.43.63:3333';
 // PRUDUCTION MODE
 const url = 'https://panda-team.herokuapp.com'
 
